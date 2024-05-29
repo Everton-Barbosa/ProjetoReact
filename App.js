@@ -1,172 +1,102 @@
-import React from "react";
-import { StyleSheet, Text, ScrollView, Image } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Ionicons } from "@expo/vector-icons";
-
-function ProfileScreen() {
+import React, { useState, useEffect } from "react";
+import { View, Text, TextInput, Button, Alert } from "react-native";
+import * as Location from "expo-location";
+import MapView, { Marker } from "react-native-maps";
+const App = () => {
+  const [movieTitle, setMovieTitle] = useState("");
+  const [movieData, setMovieData] = useState(null);
+  const [location, setLocation] = useState(null);
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permissão de localização não concedida",
+          "Por favor, conceda permissão de localização para obter a localização."
+        );
+        return;
+      }
+      let locationData = await Location.getCurrentPositionAsync({});
+      setLocation(locationData);
+    })();
+  }, []);
+  const handleSearch = async () => {
+    if (movieTitle.trim() === "") {
+      Alert.alert("Aviso", "Por favor, insira um título de filme válido.");
+      return;
+    }
+    try {
+      const apiKey = "b92ea30e";
+      const apiUrl = `https://www.omdbapi.com/?t=${movieTitle}&apikey=${apiKey}`;
+      const response = await fetch(apiUrl);
+      const data = await response.json();
+      console.log(data);
+      if (data.Response === "True") {
+        setMovieData(data);
+      } else {
+        Alert.alert(
+          "Erro",
+          "Filme não encontrado. Verifique o título e tente novamente."
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert(
+        "Erro",
+        "Houve um problema na busca do filme. Tente novamente mais tarde."
+      );
+    }
+  };
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Image source={require("./assets/Foto.jpeg")} style={styles.image} />
-      <Text style={styles.header}>Everton Barbosa</Text>
-      <Text style={styles.subheader}>
-        Análise e Desenvolvimento de Sistemas
+    <View>
+      <Text style={{ fontSize: 20, textAlign: "center", marginTop: 20 }}>
+        Procura de Livros/Séries
       </Text>
-      <Text style={styles.paragraph}>
-      Meu nome é Everton, tenho 21 anos, sou graduando de Análise e Desenvolvimento de Sistemas através do programa Embarque Digital, uma parceria entre a Prefeitura do Recife e o Porto Digital.
-      </Text>
-      <Text style={styles.paragraph}>
-        Algumas tecnologias que estou acostumado:
-      </Text>
-      {/* <Text style={styles.listItem}>
-        • Libraries and Frameworks: React, Angular, Flutter.
-      </Text> */}
-      <Text style={styles.listItem}>
-        • Programming languages: JavaScript, HTML, CSS, PHP, Figma, Linux e ferramentas voltadas para a CyberSegurança, como: NMAP, BURP, DVWA...
-      </Text>
-      <Text style={styles.listItem}>• Database: MySQL</Text>
-      <Text style={styles.listItem}>• Development tools: Git, GitHub.</Text>
-      <Text style={styles.paragraph}>
-       Atualmente estou estudando CyberSegurança para futuramente aplicar para vagas nessa mesma área.
-      </Text>
-      <Text style={styles.paragraph}>
-        Alguns dos projetos que já fiz parte são: {""}
-        <Text
-          style={styles.link}
-          onPress={() => Linking.openURL("https://shareheart.vercel.app")}
-        >
-         shareheart.vercel.app
-        </Text>{" "}
-        {""}
-        E você pode acessar outros projetos no meu GitHub: {""}
-        <Text
-          style={styles.link}
-          onPress={() => Linking.openURL("https://github.com/everton-barbosa")}
-        >
-         github.com/everton-barbosa
-        </Text>
-        <br></br>
-        .
-      </Text>
-    </ScrollView>
+      <TextInput
+        style={{ borderWidth: 1, margin: 10, padding: 8 }}
+        placeholder="Digite o nome do filme"
+        value={movieTitle}
+        onChangeText={(text) => setMovieTitle(text)}
+      />
+      <Button title="Buscar Livros/Séries" onPress={handleSearch} />
+      {location && (
+        <View>
+          <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+            Sua Localização
+          </Text>
+          <Text>Latitude: {location.coords.latitude}</Text>
+          <Text>Longitude: {location.coords.longitude}</Text>
+          <MapView
+            style={{ width: "100%", height: 200 }}
+            initialRegion={{
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}
+          >
+            <Marker
+              coordinate={{
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+              }}
+              title="Sua Localização"
+            />
+          </MapView> 
+        </View>
+      )}
+      {movieData && (
+        <View style={{ margin: 20 }}>
+          <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+            {movieData.Title}
+          </Text>
+          <Text>Ano: {movieData.Year}</Text>
+          <Text>Gênero: {movieData.Genre}</Text>
+          <Text>Diretor: {movieData.Director}</Text>
+          <Text>Prêmios: {movieData.Awards}</Text>
+        </View>
+      )}
+    </View>
   );
-}
-
-function ExperienceScreen() {
-  return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>Projetos:</Text>
-      <Text style={styles.subheader}>
-        Residência Tecnológica 2023
-      </Text>
-      <Text style={styles.paragraph}>Mottion</Text>
-      <Text style={styles.paragraph}>
-        • Um projeto feito por mim e amigos que visava um aplicativo de exercícios físicos para ajudar pessoas que necessitavam praticar exercicios mas não sabiam como começar ou por onde começar.
-      </Text>
-      <Text style={styles.subheader}>
-        Projeto da disciplina de Mobile
-      </Text>
-      <Text style={styles.paragraph}>ShareHeart</Text>
-      <Text style={styles.paragraph}>
-        • Aplicativo Mobile que visa a facilitação de doações de itens, dinheiro ou tempo para instituições em necessidade.
-      </Text>
-
-    </ScrollView>
-  );
-}
-
-function EducationScreen() {
-  return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>Formação:</Text>
-      <Text style={styles.subheader}>
-        Tecnológo em Analise e Desenvolvimento de Sistemas
-      </Text>
-      <Text style={styles.paragraph}>
-        Senac PE - 2023 - 2025
-      </Text>
-      <Text style={styles.subheader}>Desenvolvimento Wev</Text>
-      <Text style={styles.paragraph}>
-        IOS - Instituto Oportunidade Social - 2023
-      </Text>
-    </ScrollView>
-  );
-}
-
-const Tab = createBottomTabNavigator();
-
-export default function App() {
-  return (
-    <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => {
-            let iconName;
-
-            if (route.name === "Profile") {
-              iconName = focused ? "person" : "person-outline";
-            } else if (route.name === "Experience") {
-              iconName = focused ? "briefcase" : "briefcase-outline";
-            } else if (route.name === "Education") {
-              iconName = focused ? "school" : "school-outline";
-            }
-
-            return <Ionicons name={iconName} size={size} color={color} />;
-          },
-          tabBarActiveTintColor: "#008080",
-          tabBarInactiveTintColor: "gray",
-          tabBarStyle: {
-            backgroundColor: "#f8f8f8",
-            borderTopWidth: 0,
-          },
-        })}
-      >
-        <Tab.Screen name="Profile" component={ProfileScreen} />
-        <Tab.Screen name="Experience" component={ExperienceScreen} />
-        <Tab.Screen name="Education" component={EducationScreen} />
-      </Tab.Navigator>
-    </NavigationContainer>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 20,
-    paddingVertical: 30,
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  subheader: {
-    fontSize: 20,
-    fontWeight: "600",
-    marginBottom: 8,
-    textAlign: "justify",
-  },
-  paragraph: {
-    fontSize: 16,
-    marginBottom: 10,
-    textAlign: "justify",
-  },
-  listItem: {
-    fontSize: 16,
-    marginBottom: 6,
-    textAlign: "justify",
-  },
-  link: {
-    color: "#008080",
-    textDecorationLine: "underline",
-  },
-  image: {
-    width: 100,
-    height: 100,
-    borderRadius: 75,
-    alignSelf: "center",
-    marginBottom: 20,
-  },
-});
+};
+export default App;
